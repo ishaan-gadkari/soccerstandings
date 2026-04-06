@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Football App{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <a href="/" style="text-decoration:none;">
+        <div class="sidebar-logo">⚽</div>
+        <div class="sidebar-app-name">Football<br>App</div>
+      </a>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Standings</div>
+        <a href="/db"            class="nav-link {% if active_page == 'db' %}active{% endif %}">
+          <span class="nav-icon">🗄️</span> DB Standings
+        </a>
+        <a href="/api-standings" class="nav-link {% if active_page == 'api' %}active{% endif %}">
+          <span class="nav-icon">🌐</span> API Standings
+        </a>
+      </nav>
+    </aside>
+
+    <!-- ── Main content ── -->
+    <div class="content">
+      {% block content %}{% endblock %}
+    </div>
+
+  </div>
+
+</body>
+</html>
