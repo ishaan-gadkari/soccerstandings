@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}API Standings{% endblock %}
+
+{% block content %}
+
+  <form method="get" action="/api-standings">
+    <div class="controls">
+      <div class="control-group">
+        <div class="control-label">League</div>
+        <select name="league" onchange="this.form.submit()">
+          {% for league in leagues %}
+            <option value="{{ league.name }}" {% if league.name == selected_league %}selected{% endif %}>
+              {{ league.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Season</div>
+        <select name="season" onchange="this.form.submit()">
+          {% for s in seasons %}
+            <option value="{{ s }}" {% if s|string == selected_season %}selected{% endif %}>{{ s }}/{{ s + 1 }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </form>
+
+  <div class="main">
+
+    {% if error %}
+      <div style="color:#ff7070; background:#2e1a1a; border:1px solid #ff7070; border-radius:6px; padding:14px 18px; font-size:0.9rem;">
+        ⚠️ Could not load standings: {{ error }}
+      </div>
+
+    {% elif groups %}
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#74b3ff"></div>UEFA Champions League</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff8c00"></div>UEFA Europa League</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff7070"></div>Relegation</div>
+      </div>
+
+      {% for group in groups %}
+
+        {% if group.name %}
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:1rem; color:#556688; letter-spacing:3px; margin: 24px 0 8px;">
+            {{ group.name }}
+          </div>
+        {% endif %}
+
+        <div class="table-wrap" style="margin-bottom: 24px;">
+          <table>
+            <thead>
+              <tr>
+                {% for i, col in enumerate(cols) %}
+                  {% if i == 0 %}
+                    <th class="col-pos">{{ col }}</th>
+                  {% elif i == 1 %}
+                    <th class="col-team">{{ col }}</th>
+                  {% else %}
+                    <th>{{ col }}</th>
+                  {% endif %}
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for idx, row in enumerate(group.rows) %}
+                <tr class="{{ row_zone(row) }}">
+                  {% for i, val in enumerate(row) if i < 10 %}
+                    {% if i == 0 %}
+                      <td class="col-pos">{{ val }}</td>
+                    {% elif i == 1 %}
+                      <td class="col-team">
+                        {% set logo = row[11] %}
+                        {% if logo %}
+                          <img src="{{ logo }}" style="width:20px; height:20px; object-fit:contain; margin-right:8px; vertical-align:middle;">
+                        {% endif %}
+                        {{ val }}
+                      </td>
+                    {% elif i == 9 %}
+                      <td class="col-pts">{{ val }}</td>
+                    {% elif i == 8 %}
+                      <td class="col-gd">{% if val > 0 %}+{% endif %}{{ val }}</td>
+                    {% else %}
+                      <td>{{ val }}</td>
+                    {% endif %}
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+      {% endfor %}
+
+    {% else %}
+      <div style="color:#556688; font-size:0.9rem; margin-top:40px; text-align:center; letter-spacing:2px; text-transform:uppercase;">
+        No data available for this selection.
+      </div>
+    {% endif %}
+
+  </div>
+
+{% endblock %}
+
+<script>
+  document.querySelectorAll("thead th").forEach((th, colIndex) => {
+    th.style.cursor = "pointer";
+    let asc = false;
+    th.addEventListener("click", () => {
+      const table = th.closest("table");
+      const tbody = table.querySelector("tbody");
+      const rows  = Array.from(tbody.querySelectorAll("tr"));
+
+      rows.sort((a, b) => {
+        const aVal = a.cells[colIndex].innerText.trim();
+        const bVal = b.cells[colIndex].innerText.trim();
+        const aNum = parseFloat(aVal.replace("+", ""));
+        const bNum = parseFloat(bVal.replace("+", ""));
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          return asc ? aNum - bNum : bNum - aNum;
+        }
+        return asc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      });
+
+      rows.forEach(row => tbody.appendChild(row));
+      asc = !asc;
+    });
+  });
+</script>
